@@ -30,9 +30,9 @@ except Exception as e:
     st.error(f"Error initializing Gemini client: {e}")
     st.stop()
 
-# Define the model and generation settings
+# Define the model and base generation settings
 MODEL = "gemini-2.5-flash"
-CONFIG = types.GenerateContentConfig(
+BASE_CONFIG = types.GenerateContentConfig(
     temperature=0.8, # Higher temperature for more creativity
     max_output_tokens=2048
 )
@@ -124,12 +124,21 @@ if st.button("🚀 Generate Lyrics", type="primary", use_container_width=True):
         # Display waiting message
         with st.spinner("Writing the next big hit..."):
             try:
-                # Call the LLM API
+                # --- API Call with Corrected System Instruction Passing ---
+                
+                # Create a dynamic config object, injecting the system instruction correctly
+                # THIS FIXES THE 'unexpected keyword argument system_instruction' ERROR
+                generation_config = types.GenerateContentConfig(
+                    temperature=BASE_CONFIG.temperature,
+                    max_output_tokens=BASE_CONFIG.max_output_tokens,
+                    system_instruction=BASE_SYSTEM_PROMPT
+                )
+                
+                # Call the LLM API, passing the user prompt and the configuration
                 response = client.models.generate_content(
                     model=MODEL,
-                    system_instruction=BASE_SYSTEM_PROMPT,
                     contents=[full_user_prompt],
-                    config=CONFIG
+                    config=generation_config
                 )
                 
                 # --- Output ---
